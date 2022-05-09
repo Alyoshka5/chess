@@ -60,13 +60,13 @@ class Pawn
         if turn == 'white'
             moves << [row-1, col] if board[row-1][col].piece.instance_of?(Empty)
             moves << [row-2, col] if board[row-2][col].piece.instance_of?(Empty) && row == 6
-            moves << [row-1, col+1] if board[row-1][col+1].piece.color == 'black'
-            moves << [row-1, col-1] if board[row-1][col-1].piece.color == 'black'
+            moves << [row-1, col+1] if col != 7 && board[row-1][col+1].piece.color == 'black'
+            moves << [row-1, col-1] if col != 0 && board[row-1][col-1].piece.color == 'black'
         else
             moves << [row+1, col] if board[row+1][col].piece.instance_of?(Empty)
             moves << [row+2, col] if board[row+2][col].piece.instance_of?(Empty) && row == 1
-            moves << [row+1, col+1] if board[row+1][col+1].piece.color == 'white'
-            moves << [row+1, col-1] if board[row+1][col-1].piece.color == 'white'
+            moves << [row+1, col+1] if col != 7 && board[row+1][col+1].piece.color == 'white'
+            moves << [row+1, col-1] if col != 0 && board[row+1][col-1].piece.color == 'white'
         end
         moves
     end
@@ -78,6 +78,91 @@ class Rook
         @color = color
         @name = 'rook'
         @symbol = color == 'black' ? '♖' : '♜'
+    end
+
+    def valid_moves(row, col, turn, board, opponent_pieces)
+        moves = []
+
+        forward = 1
+        loop do
+            break if row == 7
+            moves << [row+forward, col]
+            break if row+forward >= 7 || !board[row+forward][col].piece.instance_of?(Empty)
+            forward += 1
+        end
+        
+        backward = 1
+        loop do
+            break if row == 0
+            moves << [row-backward, col]
+            break if row-backward == 0 || !board[row-backward][col].piece.instance_of?(Empty)
+            backward += 1
+        end
+        
+        right = 1
+        loop do
+            break if col == 7
+            moves << [row, col+right]
+            break if col+right == 7 || !board[row][col+right].piece.instance_of?(Empty)
+            right += 1
+        end
+        
+        left = 1
+        loop do
+            break if col == 0
+            moves << [row, col-left]
+            break if col-left == 0 || !board[row][col-left].piece.instance_of?(Empty)
+            left += 1
+        end
+
+        moves
+    end
+end
+
+class Bishop
+    attr_reader :color, :name, :symbol
+    def initialize(color)
+        @color = color
+        @name = 'bishop'
+        @symbol = color == 'black' ? '♗' : '♝'
+    end
+
+    def valid_moves(row, col, turn, board, opponent_pieces)
+        moves = []
+
+        for_up = 1
+        loop do
+            break if row == 0 || col == 7
+            moves << [row-for_up, col+for_up]
+            break if row-for_up == 0 || col+for_up == 7 || !board[row-for_up][col+for_up].piece.instance_of?(Empty)
+            for_up += 1
+        end
+        
+        for_down = 1
+        loop do
+            break if row == 7 || col == 7
+            moves << [row+for_down, col+for_down]
+            break if row+for_down == 7 || col+for_down == 7 || !board[row+for_down][col+for_down].piece.instance_of?(Empty)
+            for_down += 1
+        end
+        
+        back_up = 1
+        loop do
+            break if row == 0 || col == 0
+            moves << [row-back_up, col-back_up]
+            break if row-back_up == 0 || col-back_up == 0 || !board[row-back_up][col-back_up].piece.instance_of?(Empty)
+            back_up += 1
+        end
+        
+        back_down = 1
+        loop do
+            break if row == 7 || col == 0
+            moves << [row+back_down, col-back_down]
+            break if row+back_down == 7 || col-back_down == 0 || !board[row+back_down][col-back_down].piece.instance_of?(Empty)
+            back_down += 1
+        end
+
+        moves
     end
 end
 
@@ -101,15 +186,6 @@ class Knight
             end
         end
         moves
-    end
-end
-
-class Bishop
-    attr_reader :color, :name, :symbol
-    def initialize(color)
-        @color = color
-        @name = 'bishop'
-        @symbol = color == 'black' ? '♗' : '♝'
     end
 end
 

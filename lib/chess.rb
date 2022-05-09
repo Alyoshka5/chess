@@ -38,15 +38,12 @@ class Chess
     end
 
     def testing
-        display_board()
         @turn = 'white'
-        square = @board[2][4]
-        square2 = @board[1][4]
-        square2.piece = Empty.new
-        square.piece = Pawn.new('white')
-        pawn = square.piece
-        p pawn
-        p pawn.valid_moves(2, 4, @turn, @board, @black_pieces)
+        rook = Bishop.new('white')
+        @board[3][4].piece = rook
+        display_board()
+        moves = filter_moves(rook.valid_moves(3, 4, 'white', @board, @black_pieces))
+        p moves
     end
 
     def get_move
