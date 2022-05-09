@@ -2,77 +2,110 @@ require_relative 'pieces'
 
 class Chess
     def initialize
+        @white_pieces = []
+        @black_pieces = []
         @board = generate_board()
-        #p @board
+        @turn = 'black'
     end
-
+        
     def generate_board
         board = []
-        for r in 8.downto(1) do
+        for r in (0..7) do
             row = []
-            for c in (1..8) do
-                row << Square.new(r, c)
+            for c in (0..7) do
+                square = Square.new(r, c)
+                row << square
+                @white_pieces << square.piece if r <= 1
+                @black_pieces << square.piece if r >= 6  
             end
             board << row
         end
         board
     end
 
-    def display_board
-        row_count = 9
-        display = @board.map do |row|
-            row_count -= 1
-            row.map! {|square| square.piece.symbol}
-            " #{row_count} | " + row.join(" | ") + " |"
+    def play_game
+        checkmate = false
+        puts "Enter starting and ending coordinates (from 0 - 7), each seperated by a space (ex: 1 7 3 6)"
+        puts "First input row (y-axis) and then column (x-axis)"
+        until checkmate do
+            @turn = @turn == 'black' ? 'white' : 'black'
+            display_board()
+            puts "#{@turn}'s move: "
+
+            move = get_move()
+            #place_move(move)
         end
-        num_line = "     1   2   3   4   5   6   7   8 \n"
+    end
+
+    def testing
+        display_board()
+        @turn = 'white'
+        square = @board[2][4]
+        square2 = @board[1][4]
+        square2.piece = Empty.new
+        square.piece = Pawn.new('white')
+        pawn = square.piece
+        p pawn
+        p pawn.valid_moves(2, 4, @turn, @board, @black_pieces)
+    end
+
+    def get_move
+        loop do
+            valid = true
+            move = gets.split.map {|coord| coord.to_i}
+            valid = false if move.length != 4
+            move.each do |coord|
+                if coord < 0 || coord > 7
+                    valid = false
+                end
+            end
+            return move if valid && valid_move?(move)
+            puts "Invalid move"
+        end
+    end
+
+    def valid_move?(move)
+        start_piece = @board[move[0]][move[1]].piece
+        finish_piece = @board[move[2]][move[3]].piece
+        return false if start_piece.color != @turn
+
+        opponent_pieces = @turn == 'white' ? @black_pieces : @white_pieces
+        valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board, opponent_pieces)
+        valid_moves = filter_moves(valid_moves)
+        return false if !valid_moves.include?([move[2], move[3]])
+
+        check_board = @board
+        check_board[move[2]][move[3]].piece = start_piece
+        check_board[move[0]][move[1]].piece = Empty.new
+        @board = check_board
+        
+        #return false if check?(check_board)
+        
+        
+        p start_piece
+        p finish_piece
+        p valid_moves
+        true
+    end
+
+    def filter_moves(moves)
+        moves.filter! {|move| move[0] >= 0 && move[0] <= 7 && move[1] >= 0 && move[1] <= 7}
+        moves.filter {|move| @board[move[0]][move[1]].piece.color != (@turn == 'white' ? 'white' : 'black')}
+    end
+
+    def display_board
+        row_count = -1
+        display = @board.map do |row|
+            row_count += 1
+            symbol_row = row.map {|square| square.piece.symbol}
+            " #{row_count} | " + symbol_row.join(" | ") + " |"
+        end
+        num_line = "     0   1   2   3   4   5   6   7 \n"
         row_line = "\n   —————————————————————————————————\n"
         puts row_line + display.join(row_line) + row_line + num_line
             
     end
 end
 
-class Square
-    attr_accessor :piece
-    attr_reader :coordinates
-    def initialize(row, col)
-        @coordinates = [row, col]
-        @piece = get_piece(row, col)
-    end
-
-    def get_piece(row, col)
-        return Pawn.new('black') if row == 7
-        return Pawn.new('white') if row == 2
-        return Empty.new if row >= 3 && row <= 6
-        if row == 8
-            if col == 1 || col == 8
-                return Rook.new('black')
-            elsif col == 2 || col == 7
-                return Knight.new('black')
-            elsif col == 3 || col == 6
-                return Bishop.new('black')
-            elsif col == 4
-                return Queen.new('black')
-            else
-                return King.new('black')
-            end
-        else
-            if col == 1 || col == 8
-                return Rook.new('white')
-            elsif col == 2 || col == 7
-                return Knight.new('white')
-            elsif col == 3 || col == 6
-                return Bishop.new('white')
-            elsif col == 4
-                return Queen.new('white')
-            else
-                return King.new('white')
-            end
-        end
-    end
-end
-
-
-
 game = Chess.new
-game.display_board
+game.play_game
