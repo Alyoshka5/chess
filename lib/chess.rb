@@ -42,7 +42,7 @@ class Chess
         rook = Bishop.new('white')
         @board[3][4].piece = rook
         display_board()
-        moves = filter_moves(rook.valid_moves(3, 4, 'white', @board, @black_pieces))
+        moves = filter_moves(rook.valid_moves(3, 4, 'white', @board))
         p moves
     end
 
@@ -66,28 +66,38 @@ class Chess
         finish_piece = @board[move[2]][move[3]].piece
         return false if start_piece.color != @turn
 
-        opponent_pieces = @turn == 'white' ? @black_pieces : @white_pieces
-        valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board, opponent_pieces)
+        valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board)
         valid_moves = filter_moves(valid_moves)
+        p valid_moves
         return false if !valid_moves.include?([move[2], move[3]])
 
-        check_board = @board
-        check_board[move[2]][move[3]].piece = start_piece
-        check_board[move[0]][move[1]].piece = Empty.new
-        @board = check_board
+        taken_piece = @board[move[2]][move[3]].piece
+        @board[move[2]][move[3]].piece = start_piece
+        @board[move[0]][move[1]].piece = Empty.new
         
-        #return false if check?(check_board)
-        
-        
-        p start_piece
-        p finish_piece
-        p valid_moves
-        true
+        is_check = check?(@board, @turn)
+        @board[move[0]][move[1]].piece = start_piece
+        @board[move[2]][move[3]].piece = taken_piece
+        return !is_check
     end
 
     def filter_moves(moves)
         moves.filter! {|move| move[0] >= 0 && move[0] <= 7 && move[1] >= 0 && move[1] <= 7}
         moves.filter {|move| @board[move[0]][move[1]].piece.color != (@turn == 'white' ? 'white' : 'black')}
+    end
+
+    def check?(board, turn)
+        king_coords = board.flatten.find {|square| square.piece.name == 'king' && square.piece.color == turn}.coordinates
+
+        board.flatten.each do |square|
+            piece = square.piece
+            next if piece.instance_of?(Empty) || piece.color == turn
+            enemy_turn = (turn == 'white' ? 'black' : 'white')
+            piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, board)
+            puts "checking" if piece_moves.include?(king_coords)
+            return true if piece_moves.include?(king_coords)
+        end
+        false
     end
 
     def display_board
