@@ -2,8 +2,6 @@ require_relative 'pieces'
 
 class Chess
     def initialize
-        @white_pieces = []
-        @black_pieces = []
         @board = generate_board()
         @turn = 'black'
     end
@@ -15,8 +13,6 @@ class Chess
             for c in (0..7) do
                 square = Square.new(r, c)
                 row << square
-                @white_pieces << square.piece if r <= 1
-                @black_pieces << square.piece if r >= 6  
             end
             board << row
         end
@@ -33,7 +29,7 @@ class Chess
             puts "#{@turn}'s move: "
 
             move = get_move()
-            #place_move(move)
+            place_move(move)
         end
     end
 
@@ -66,7 +62,11 @@ class Chess
         finish_piece = @board[move[2]][move[3]].piece
         return false if start_piece.color != @turn
 
-        valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board)
+        if start_piece.instance_of?(King)
+            valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board, check?(@board, @turn))
+        else
+            valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board)
+        end
         valid_moves = filter_moves(valid_moves)
         p valid_moves
         return false if !valid_moves.include?([move[2], move[3]])
@@ -81,6 +81,68 @@ class Chess
         return !is_check
     end
 
+    def place_move(move)
+        # king castling
+        if @board[move[0]][move[1]].piece.instance_of?(King)
+            if @turn == 'white'
+                if move[0] == 7 && move[1] == 4 && move[2] == 7 && move[3] == 6
+                    king = @board[7][4].piece
+                    rook = @board[7][7].piece
+                    @board[7][6].piece = king
+                    @board[7][5].piece = rook
+                    @board[7][4].piece = Empty.new
+                    @board[7][7].piece = Empty.new
+                    return
+                elsif move[0] == 7 && move[1] == 4 && move[2] == 7 && move[3] == 2
+                    king = @board[7][4].piece
+                    rook = @board[7][0].piece
+                    @board[7][2].piece = king
+                    @board[7][3].piece = rook
+                    @board[7][4].piece = Empty.new
+                    @board[7][0].piece = Empty.new
+                    return
+                end
+            else
+                if move[0] == 0 && move[1] == 4 && move[2] == 0 && move[3] == 6
+                    king = @board[0][4].piece
+                    rook = @board[0][7].piece
+                    @board[0][6].piece = king
+                    @board[0][5].piece = rook
+                    @board[0][4].piece = Empty.new
+                    @board[0][7].piece = Empty.new
+                    return
+                elsif move[0] == 0 && move[1] == 4 && move[2] == 0 && move[3] == 2
+                    king = @board[0][4].piece
+                    rook = @board[0][0].piece
+                    @board[0][2].piece = king
+                    @board[0][3].piece = rook
+                    @board[0][4].piece = Empty.new
+                    @board[0][0].piece = Empty.new
+                    return
+                end
+            end
+        end
+
+        # replace pawn with new piece if it reaches the end of the board
+        if @board[move[0]][move[1]].piece.instance_of?(Pawn) && move[2] == (@turn == 'white' ? 0 : 7)
+            "Enter piece to replace pawn (queen, rook, knight, bishop):"
+            loop do
+                replacement = gets.downcase.chomp
+                break if ['queen', 'rook', 'knight', 'bishop'].include?(replacement)
+                puts "Invalid choice: "
+            end
+            new_piece = Queen.new(@turn) if replacement == 'queen'
+            new_piece = Rook.new(@turn) if replacement == 'rook'
+            new_piece = Knight.new(@turn) if replacement == 'knight'
+            new_piece = Bishop.new(@turn) if replacement == 'bishop'
+            @board[move[0]][move[1]].piece = new_piece
+        end
+
+        # make move
+        @board[move[2]][move[3]].piece = @board[move[0]][move[1]].piece
+        @board[move[0]][move[1]].piece = Empty.new
+    end
+
     def filter_moves(moves)
         moves.filter! {|move| move[0] >= 0 && move[0] <= 7 && move[1] >= 0 && move[1] <= 7}
         moves.filter {|move| @board[move[0]][move[1]].piece.color != (@turn == 'white' ? 'white' : 'black')}
@@ -93,7 +155,11 @@ class Chess
             piece = square.piece
             next if piece.instance_of?(Empty) || piece.color == turn
             enemy_turn = (turn == 'white' ? 'black' : 'white')
-            piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, board)
+            if piece.instance_of?(King)
+                piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, board, true)
+            else
+                piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, board)
+            end
             puts "checking" if piece_moves.include?(king_coords)
             return true if piece_moves.include?(king_coords)
         end

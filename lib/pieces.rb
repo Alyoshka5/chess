@@ -55,7 +55,9 @@ class Pawn
         @symbol = color == 'black' ? '♙' : '♟'
     end
 
-    def valid_moves(row, col, turn, board, opponent_pieces)
+    def valid_moves(row, col, turn, board)
+        # p "r #{row} ; c #{col} ; t #{turn} ; b #{board}\n"
+        # p board[row+1]
         moves = []
         if turn == 'white'
             moves << [row-1, col] if board[row-1][col].piece.instance_of?(Empty)
@@ -80,7 +82,7 @@ class Knight
         @symbol = color == 'black' ? '♘' : '♞'
     end
 
-    def valid_moves(row, col, turn, board, opponent_pieces)
+    def valid_moves(row, col, turn, board)
         moves = []
         directions = [1, 2, -1, -2]
         for i in directions
@@ -105,7 +107,7 @@ class Rook
         @move_count = 0
     end
 
-    def valid_moves(row, col, turn, board, opponent_pieces)
+    def valid_moves(row, col, turn, board)
         moves = []
 
         forward = 1
@@ -152,7 +154,7 @@ class Bishop
         @symbol = color == 'black' ? '♗' : '♝'
     end
 
-    def valid_moves(row, col, turn, board, opponent_pieces)
+    def valid_moves(row, col, turn, board)
         moves = []
 
         for_up = 1
@@ -199,7 +201,7 @@ class Queen
         @symbol = color == 'black' ? '♕' : '♛'
     end
 
-    def valid_moves(row, col, turn, board, opponent_pieces)
+    def valid_moves(row, col, turn, board)
         moves = []
 
         forward = 1
@@ -280,29 +282,28 @@ class King
         @move_count = 0
     end
 
-    def valid_moves(row, col, turn, board, opponent_pieces, enemy_king_coord)
+    def valid_moves(row, col, turn, board, check)
         directions = [-1, 0, 1]
         moves = []
-        enemy_king_spaces = []
         for i in directions
             for j in directions
                 moves << [row+i, col+j] unless i == 0 && j == 0
-                enemy_king_spaces << [enemy_king_coord[0]+i, enemy_king_coord[1]+j] unless i == 0 && j == 0
             end
         end
-        moves.filter! {|move| !enemy_king_spaces.include?(move)}
 
-        if turn == 'white'
-            if row == 7 && col == 4 && @move_count == 0 && board[7][7].piece.name == 'rook' && board[7][7].piece.move_count == 0 && board[7][5].piece.instance_of?(Empty) && board[7][6].piece.instance_of?(Empty)
-                moves << [7, 6]
-            elsif row == 7 && col == 4 && @move_count == 0 && board[7][0].piece.name == 'rook' && board[7][0].piece.move_count == 0 && board[7][1].piece.instance_of?(Empty) && board[7][2].piece.instance_of?(Empty) && board[7][3].piece.instance_of?(Empty)
-                moves << [7, 1]
-            end
-        else
-            if row == 0 && col == 4 && @move_count == 0 && board[0][7].piece.name == 'rook' && board[0][7].piece.move_count == 0 && board[0][5].piece.instance_of?(Empty) && board[0][6].piece.instance_of?(Empty)
-                moves << [0, 6]
-            elsif row == 0 && col == 4 && @move_count == 0 && board[0][0].piece.name == 'rook' && board[0][0].piece.move_count == 0 && board[0][1].piece.instance_of?(Empty) && board[0][2].piece.instance_of?(Empty) && board[0][3].piece.instance_of?(Empty)
-                moves << [0, 1]
+        if !check
+            if turn == 'white'
+                if row == 7 && col == 4 && @move_count == 0 && board[7][7].piece.name == 'rook' && board[7][7].piece.move_count == 0 && board[7][5].piece.instance_of?(Empty) && board[7][6].piece.instance_of?(Empty)
+                    moves << [7, 6]
+                elsif row == 7 && col == 4 && @move_count == 0 && board[7][0].piece.name == 'rook' && board[7][0].piece.move_count == 0 && board[7][1].piece.instance_of?(Empty) && board[7][2].piece.instance_of?(Empty) && board[7][3].piece.instance_of?(Empty)
+                    moves << [7, 1]
+                end
+            else
+                if row == 0 && col == 4 && @move_count == 0 && board[0][7].piece.name == 'rook' && board[0][7].piece.move_count == 0 && board[0][5].piece.instance_of?(Empty) && board[0][6].piece.instance_of?(Empty)
+                    moves << [0, 6]
+                elsif row == 0 && col == 4 && @move_count == 0 && board[0][0].piece.name == 'rook' && board[0][0].piece.move_count == 0 && board[0][1].piece.instance_of?(Empty) && board[0][2].piece.instance_of?(Empty) && board[0][3].piece.instance_of?(Empty)
+                    moves << [0, 1]
+                end
             end
         end
 
