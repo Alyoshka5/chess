@@ -23,10 +23,10 @@ class Chess
         checkmate = false
         puts "Enter starting and ending coordinates (from 0 - 7), each seperated by a space (ex: 1 7 3 6)"
         puts "First input row (y-axis) and then column (x-axis)"
-        until checkmate do
+        until game_end?() do
             @turn = @turn == 'black' ? 'white' : 'black'
             display_board()
-            puts "#{@turn}'s move: "
+            puts "\n#{@turn}'s move: "
 
             move = get_move()
             place_move(move)
@@ -38,8 +38,41 @@ class Chess
         rook = Bishop.new('white')
         @board[3][4].piece = rook
         display_board()
-        moves = filter_moves(rook.valid_moves(3, 4, 'white', @board))
+        moves = filter_moves(rook.valid_moves(3, 4, 'white', @board), @turn)
         p moves
+    end
+
+    def game_end?
+        enemy_color = @turn == 'white' ? 'black' : 'white'
+        @board.flatten.each do |square|
+            piece = square.piece
+            next if piece.color != enemy_color
+            coordinate = square.coordinates
+            if piece.instance_of?(King)
+                piece_moves = filter_moves(piece.valid_moves(coordinate[0], coordinate[1], enemy_color, @board, check?(@turn)), enemy_color)
+            else
+                piece_moves = filter_moves(piece.valid_moves(coordinate[0], coordinate[1], enemy_color, @board), enemy_color)
+            end
+            
+            piece_moves.each do |move_to|
+                taken_piece = @board[move_to[0]][move_to[1]].piece
+                @board[move_to[0]][move_to[1]].piece = piece
+                @board[coordinate[0]][coordinate[1]].piece = Empty.new
+
+                game_ending = check?(enemy_color)
+                @board[coordinate[0]][coordinate[1]].piece = piece
+                @board[move_to[0]][move_to[1]].piece = taken_piece
+                return false if !game_ending
+            end
+        end
+
+        if check?(enemy_color)
+            puts "\nCHECKMATE"
+            puts "#{@turn.capitalize} wins!"
+        else
+            puts "\nSTALEMATE"
+        end
+        true
     end
 
     def get_move
@@ -63,21 +96,21 @@ class Chess
         return false if start_piece.color != @turn
 
         if start_piece.instance_of?(King)
-            valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board, check?(@board, @turn))
+            valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board, check?(@turn))
         else
             valid_moves = start_piece.valid_moves(move[0], move[1], @turn, @board)
         end
-        valid_moves = filter_moves(valid_moves)
-        p valid_moves
+        valid_moves = filter_moves(valid_moves, @turn)
         return false if !valid_moves.include?([move[2], move[3]])
 
         taken_piece = @board[move[2]][move[3]].piece
         @board[move[2]][move[3]].piece = start_piece
         @board[move[0]][move[1]].piece = Empty.new
         
-        is_check = check?(@board, @turn)
+        is_check = check?(@turn)
         @board[move[0]][move[1]].piece = start_piece
         @board[move[2]][move[3]].piece = taken_piece
+        puts "\nKING IN CHECK" if is_check
         return !is_check
     end
 
@@ -125,11 +158,12 @@ class Chess
 
         # replace pawn with new piece if it reaches the end of the board
         if @board[move[0]][move[1]].piece.instance_of?(Pawn) && move[2] == (@turn == 'white' ? 0 : 7)
-            "Enter piece to replace pawn (queen, rook, knight, bishop):"
+            puts "Enter piece to replace pawn (queen, rook, knight, bishop):"
+            replacement = ''
             loop do
                 replacement = gets.downcase.chomp
                 break if ['queen', 'rook', 'knight', 'bishop'].include?(replacement)
-                puts "Invalid choice: "
+                puts "Invalid choice"
             end
             new_piece = Queen.new(@turn) if replacement == 'queen'
             new_piece = Rook.new(@turn) if replacement == 'rook'
@@ -143,24 +177,23 @@ class Chess
         @board[move[0]][move[1]].piece = Empty.new
     end
 
-    def filter_moves(moves)
+    def filter_moves(moves, turn)
         moves.filter! {|move| move[0] >= 0 && move[0] <= 7 && move[1] >= 0 && move[1] <= 7}
-        moves.filter {|move| @board[move[0]][move[1]].piece.color != (@turn == 'white' ? 'white' : 'black')}
+        moves.filter {|move| @board[move[0]][move[1]].piece.color != turn}
     end
 
-    def check?(board, turn)
-        king_coords = board.flatten.find {|square| square.piece.name == 'king' && square.piece.color == turn}.coordinates
+    def check?(turn)
+        king_coords = @board.flatten.find {|square| square.piece.name == 'king' && square.piece.color == turn}.coordinates
 
-        board.flatten.each do |square|
+        @board.flatten.each do |square|
             piece = square.piece
             next if piece.instance_of?(Empty) || piece.color == turn
             enemy_turn = (turn == 'white' ? 'black' : 'white')
             if piece.instance_of?(King)
-                piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, board, true)
+                piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, @board, true)
             else
-                piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, board)
+                piece_moves = piece.valid_moves(square.coordinates[0], square.coordinates[1], enemy_turn, @board)
             end
-            puts "checking" if piece_moves.include?(king_coords)
             return true if piece_moves.include?(king_coords)
         end
         false
