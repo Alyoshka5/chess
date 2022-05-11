@@ -61,12 +61,12 @@ class Pawn
         moves = []
         if turn == 'white'
             moves << [row-1, col] if board[row-1][col].piece.instance_of?(Empty)
-            moves << [row-2, col] if board[row-2][col].piece.instance_of?(Empty) && row == 6
+            moves << [row-2, col] if row == 6 && board[row-2][col].piece.instance_of?(Empty)
             moves << [row-1, col+1] if col != 7 && board[row-1][col+1].piece.color == 'black'
             moves << [row-1, col-1] if col != 0 && board[row-1][col-1].piece.color == 'black'
         else
             moves << [row+1, col] if board[row+1][col].piece.instance_of?(Empty)
-            moves << [row+2, col] if board[row+2][col].piece.instance_of?(Empty) && row == 1
+            moves << [row+2, col] if row == 1 && board[row+2][col].piece.instance_of?(Empty)
             moves << [row+1, col+1] if col != 7 && board[row+1][col+1].piece.color == 'white'
             moves << [row+1, col-1] if col != 0 && board[row+1][col-1].piece.color == 'white'
         end
