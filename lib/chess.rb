@@ -172,6 +172,9 @@ class Chess
             @board[move[0]][move[1]].piece = new_piece
         end
 
+        piece = @board[move[0]][move[1]].piece
+        piece.move_count += 1 if piece.instance_of?(King) || piece.instance_of?(Rook)
+
         # make move
         @board[move[2]][move[3]].piece = @board[move[0]][move[1]].piece
         @board[move[0]][move[1]].piece = Empty.new
