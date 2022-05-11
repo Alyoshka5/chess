@@ -302,7 +302,7 @@ class King
                 if row == 0 && col == 4 && @move_count == 0 && board[0][7].piece.name == 'rook' && board[0][7].piece.move_count == 0 && board[0][5].piece.instance_of?(Empty) && board[0][6].piece.instance_of?(Empty)
                     moves << [0, 6]
                 elsif row == 0 && col == 4 && @move_count == 0 && board[0][0].piece.name == 'rook' && board[0][0].piece.move_count == 0 && board[0][1].piece.instance_of?(Empty) && board[0][2].piece.instance_of?(Empty) && board[0][3].piece.instance_of?(Empty)
-                    moves << [0, 1]
+                    moves << [0, 2]
                 end
             end
         end
