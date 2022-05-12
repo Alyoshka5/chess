@@ -1,9 +1,9 @@
 class Square
     attr_accessor :piece
     attr_reader :coordinates
-    def initialize(row, col)
+    def initialize(row, col, piece = nil)
         @coordinates = [row, col]
-        @piece = get_piece(row, col)
+        @piece = piece ? piece : get_piece(row, col)
     end
 
     def get_piece(row, col)
@@ -100,11 +100,11 @@ end
 class Rook
     attr_reader :color, :name, :symbol
     attr_accessor :move_count
-    def initialize(color)
+    def initialize(color, move_count = nil)
         @color = color
         @name = 'rook'
         @symbol = color == 'black' ? '♖' : '♜'
-        @move_count = 0
+        @move_count = move_count ? move_count : 0
     end
 
     def valid_moves(row, col, turn, board)
@@ -275,11 +275,11 @@ end
 class King
     attr_reader :color, :name, :symbol
     attr_accessor :move_count
-    def initialize(color)
+    def initialize(color, move_count = nil)
         @color = color
         @name = 'king'
         @symbol = color == 'black' ? '♔' : '♚'
-        @move_count = 0
+        @move_count = move_count ? move_count : 0
     end
 
     def valid_moves(row, col, turn, board, check)

@@ -2,9 +2,10 @@ require 'json'
 require_relative 'pieces'
 
 class Chess
-    def initialize
-        @board = generate_board()
-        @turn = 'black'
+    def initialize(board = nil, turn = nil, loaded_game = false)
+        @board = board ? board : generate_board()
+        @turn = turn ? turn : 'black'
+        @loaded_game = loaded_game
     end
         
     def generate_board
@@ -33,7 +34,9 @@ class Chess
     end
 
     def play_game
-        #return if load_game()
+        if !@loaded_game
+            return if load_or_delete()
+        end
         puts "Enter starting and ending coordinates (from 0 - 7), each seperated by a space (ex: 1 7 3 6)"
         puts "First input row (y-axis) and then column (x-axis)"
         until game_end?() do
@@ -223,28 +226,110 @@ class Chess
     end
     
     def to_json
+        @board.each_with_index do |row, r|
+            row.each_with_index do |square, c|
+                piece = square.piece
+                piece_hash = {
+                    :color => piece.color,
+                    :name => piece.name
+                }
+                piece_hash[:move_count] = piece.move_count if piece.instance_of?(King) || piece.instance_of?(Rook)
+                square.piece = piece_hash
+
+                square_hash = {
+                    :coordinates => square.coordinates,
+                    :piece => square.piece
+                }
+                @board[r][c] = square_hash
+            end
+        end
+
         JSON.dump ({
             :board => @board,
             :turn => @turn
         })
     end
 
+    def from_json(game_string, game_name)
+        data = JSON.load game_string
+
+        board = data['board']
+        board.each_with_index do |row, r|
+            row.each_with_index do |square_hash, c|
+                piece_hash = square_hash['piece']
+                piece = Empty.new if !piece_hash['name']
+                piece = Pawn.new(piece_hash['color']) if piece_hash['name'] == 'pawn'
+                piece = Rook.new(piece_hash['color'], piece_hash['move_count']) if piece_hash['name'] == 'rook'
+                piece = Knight.new(piece_hash['color']) if piece_hash['name'] == 'knight'
+                piece = Bishop.new(piece_hash['color']) if piece_hash['name'] == 'bishop'
+                piece = Queen.new(piece_hash['color']) if piece_hash['name'] == 'queen'
+                piece = King.new(piece_hash['color'], piece_hash['move_count']) if piece_hash['name'] == 'king'
+                
+                square = Square.new(r, c, piece)
+                board[r][c] = square
+            end
+        end
+
+        turn = data['turn'] == 'white' ? 'black' : 'white'
+        Chess.new(board, turn, game_name)
+    end
+
     def save_game
-        puts "Game name (no spaces): "
         game_name = ''
-        loop do
-            game_name = gets.chomp
-            break if game_name.split.length == 1
-            puts "Invalid name"
+        if @loaded_game
+            game_name = @loaded_game  # @loaded_game contains the name of the game
+        else
+            puts "\nGame name (no spaces): "
+            loop do
+                game_name = gets.chomp
+                break if game_name.split.length == 1
+                puts "Invalid name"
+            end
         end
 
         begin
             Dir.mkdir('saved_games') unless Dir.exist?('saved_games')
             filename = "saved_games/#{game_name}.json"
             File.open(filename, 'w') {|file| file.puts to_json()}
-            puts "Game saved."
+            puts "Game saved as #{game_name}"
         rescue
             puts "Failed to save game."
+        end
+    end
+
+    def load_or_delete
+        puts "Load game by inputing: load game_name / Delete a saved game by inputing: delete game_name"
+        puts "Press enter with inputing anything to load a new game"
+        loop do
+            puts "\nEnter command: "
+            command = gets.downcase.chomp
+            if command.length == 0
+                return false
+            elsif command[0..4] == "load "
+                return true if load_game(command[5..-1])
+            elsif command[0..6] == "delete "
+                delete_game(command[7..-1])
+            end
+        end
+    end
+
+    def load_game(game_name)
+        filename = "saved_games/#{game_name}.json"
+        if File.file?(filename)
+            game = from_json(File.read(filename).chomp, game_name)
+            game.play_game
+            return true
+        else
+            puts "This game does not exist"
+        end
+    end
+
+    def delete_game(game_name)
+        filename = "saved_games/#{game_name}.json"
+        if File.file?(filename)
+            File.delete(filename)
+        else
+            puts "This game does not exist"
         end
     end
 
