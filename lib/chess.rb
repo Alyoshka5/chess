@@ -1,3 +1,4 @@
+require 'json'
 require_relative 'pieces'
 
 class Chess
@@ -32,7 +33,7 @@ class Chess
     end
 
     def play_game
-        checkmate = false
+        #return if load_game()
         puts "Enter starting and ending coordinates (from 0 - 7), each seperated by a space (ex: 1 7 3 6)"
         puts "First input row (y-axis) and then column (x-axis)"
         until game_end?() do
@@ -41,8 +42,10 @@ class Chess
             puts "\n#{@turn}'s move: "
             
             move = get_move()
+            return if move.nil?
             place_move(move)
         end
+        
     end
 
     def testing
@@ -57,7 +60,12 @@ class Chess
     def get_move
         loop do
             valid = true
-            move = gets.split.map {|coord| coord.to_i}
+            move = gets
+            if move.downcase.chomp == 'save'
+                save_game()
+                return nil
+            end
+            move = move.split.map {|coord| coord.to_i}
             valid = false if move.length != 4
             move.each do |coord|
                 if coord < 0 || coord > 7
@@ -212,6 +220,32 @@ class Chess
             puts "\nSTALEMATE"
         end
         true
+    end
+    
+    def to_json
+        JSON.dump ({
+            :board => @board,
+            :turn => @turn
+        })
+    end
+
+    def save_game
+        puts "Game name (no spaces): "
+        game_name = ''
+        loop do
+            game_name = gets.chomp
+            break if game_name.split.length == 1
+            puts "Invalid name"
+        end
+
+        begin
+            Dir.mkdir('saved_games') unless Dir.exist?('saved_games')
+            filename = "saved_games/#{game_name}.json"
+            File.open(filename, 'w') {|file| file.puts to_json()}
+            puts "Game saved."
+        rescue
+            puts "Failed to save game."
+        end
     end
 
 end
