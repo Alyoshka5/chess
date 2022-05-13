@@ -216,12 +216,14 @@ class Chess
                 return false if !game_ending
             end
         end
+        display_board()
         if check?(enemy_color)
             puts "\nCHECKMATE"
             puts "#{@turn.capitalize} wins!"
         else
             puts "\nSTALEMATE"
         end
+        delete_game(@loaded_game) if @loaded_game
         true
     end
     
