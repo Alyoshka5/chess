@@ -310,6 +310,3 @@ class King
         moves
     end
 end
-
-
-symbols = '♔♕♗♘♙♖♚♛♝♞♟♜'
