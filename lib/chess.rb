@@ -307,12 +307,20 @@ class Chess
             command = gets.downcase.chomp
             if command.length == 0
                 return false
+            elsif command == "list"
+                list_games()
             elsif command[0..4] == "load "
                 return true if load_game(command[5..-1])
             elsif command[0..6] == "delete "
                 delete_game(command[7..-1])
             end
         end
+    end
+
+    def list_games
+        puts "\nCurrently saved games: "
+        saved_games = Dir.entries("saved_games")
+        saved_games.each {|game| puts game[0...-5] if game.include?('.json')}
     end
 
     def load_game(game_name)
