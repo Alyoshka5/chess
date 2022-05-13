@@ -26,11 +26,10 @@ class Chess
         display = @board.map do |row|
             row_count -= 1
             symbol_row = row.map {|square| square.piece.symbol}
-            " #{row_count} | " + symbol_row.join(" | ") + " |"
+            "\n #{row_count}  " + symbol_row.join(" ") + "  #{row_count}"
         end
-        num_line = "     a   b   c   d   e   f   g   h \n"
-        row_line = "\n   —————————————————————————————————\n"
-        puts row_line + display.join(row_line) + row_line + num_line
+        col_line = "\n    a b c d e f g h \n"
+        puts "\n#{col_line}" + display.join() + "\n#{col_line}"
     end
 
     def play_game

@@ -43,7 +43,7 @@ class Empty
     def initialize
         @color = nil
         @name = nil
-        @symbol = ' '
+        @symbol = '☐'
     end
 end
 
