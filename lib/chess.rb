@@ -346,6 +346,7 @@ class Chess
         filename = "saved_games/#{game_name}.json"
         if File.file?(filename)
             File.delete(filename)
+            puts "#{game_name} game deleted"
         else
             puts "This game does not exist"
         end
