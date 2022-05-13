@@ -300,7 +300,8 @@ class Chess
     end
 
     def load_or_delete
-        puts "Load game by inputing: load game_name / Delete a saved game by inputing: delete game_name"
+        puts "Load game by entering: load game_name / Delete a saved game by entering: delete game_name"
+        puts "To see all currently saved games enter: list"
         puts "Press enter with inputing anything to load a new game"
         loop do
             puts "\nEnter command: "
