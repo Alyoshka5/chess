@@ -327,7 +327,15 @@ class Chess
 
     def list_games
         puts "\nCurrently saved games: "
+        if !Dir.exist?("saved_games")
+            puts "No games currently saved"
+            return
+        end
         saved_games = Dir.entries("saved_games")
+        if saved_games.length <= 2
+            puts "No games currently saved"
+            return
+        end
         saved_games.each {|game| puts game[0...-5] if game.include?('.json')}
     end
 
