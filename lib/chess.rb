@@ -22,13 +22,13 @@ class Chess
     end
     
     def display_board
-        row_count = -1
+        row_count = 9
         display = @board.map do |row|
-            row_count += 1
+            row_count -= 1
             symbol_row = row.map {|square| square.piece.symbol}
             " #{row_count} | " + symbol_row.join(" | ") + " |"
         end
-        num_line = "     0   1   2   3   4   5   6   7 \n"
+        num_line = "     a   b   c   d   e   f   g   h \n"
         row_line = "\n   —————————————————————————————————\n"
         puts row_line + display.join(row_line) + row_line + num_line
     end
@@ -37,8 +37,8 @@ class Chess
         if !@loaded_game
             return if load_or_delete()
         end
-        puts "Enter starting and ending coordinates (from 0 - 7), each seperated by a space (ex: 1 7 3 6)"
-        puts "First input row (y-axis) and then column (x-axis)"
+        puts "Enter starting and ending coordinates, seperate coordinates by a space"
+        puts "Ex: e2 e4"
         until game_end?() do
             @turn = @turn == 'black' ? 'white' : 'black'
             display_board()
@@ -68,13 +68,21 @@ class Chess
                 save_game()
                 return nil
             end
-            move = move.split.map {|coord| coord.to_i}
-            valid = false if move.length != 4
-            move.each do |coord|
-                if coord < 0 || coord > 7
-                    valid = false
-                end
+
+            move = move.split
+            if move.length == 2 && move[0].length == 2 && move[1].length == 2
+                move = [move[0][0], move[0][1], move[1][0], move[1][1]]
+                valid = false if !(('a'..'h').include?(move[0].downcase)) || !(Float(move[1]) != nil rescue false) || !(('a'..'h').include?(move[2].downcase)) || !(Float(move[3]) != nil rescue false)
+                move[0].downcase!
+                move[1] = move[1].to_i
+                move[2].downcase!
+                move[3] = move[3].to_i
+                valid = false if move[1] < 1 || move[1] > 8 || move[3] < 1 || move[3] > 8
+                move = [8 - move[1], move[0].ord - 97, 8 - move[3], move[2].ord - 97]
+            else
+                valid = false
             end
+
             return move if valid && valid_move?(move)
             puts "Invalid move"
         end
